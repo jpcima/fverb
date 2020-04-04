@@ -4,6 +4,11 @@
 //     Journal of the Audio Engineering Society 45.9 (1997): 660-684.
 //
 
+declare name "fverb";
+declare author "Jean Pierre Cimalando";
+declare version "0.5";
+declare license "BSD-2-Clause";
+
 import("stdfaust.lib");
 
 ptMax = 1.;
