@@ -14,18 +14,19 @@ import("stdfaust.lib");
 ptMax = 1.;
 pt = hslider("[01] Predelay [unit:s]", 0., 0., ptMax, 0.001) : si.smoo;
 ing = hslider("[02] Input amount [unit:%]", 100., 0., 100., 0.01) : *(0.01) : si.smoo;
-tone = hslider("[03] Input low-pass cutoff [unit:Hz] [scale:log]", 10000., 10., 20000., 1.) : si.smoo;
-id1 = hslider("[04] Input diffusion 1 [unit:%]", 75., 0., 100., 0.01) : *(0.01) : si.smoo;
-id2 = hslider("[05] Input diffusion 2 [unit:%]", 62.5, 0., 100., 0.01) : *(0.01) : si.smoo;
-dd1 = hslider("[06] Tail density [unit:%]", 70., 0., 100., 0.01) : *(0.01) : si.smoo;
+tone = hslider("[03] Input low-pass cutoff [unit:Hz] [scale:log]", 10000., 1., 20000., 1.);
+htone = hslider("[04] Input high-pass cutoff [unit:Hz] [scale:log]", 100., 1., 1000., 1.);
+id1 = hslider("[05] Input diffusion 1 [unit:%]", 75., 0., 100., 0.01) : *(0.01) : si.smoo;
+id2 = hslider("[06] Input diffusion 2 [unit:%]", 62.5, 0., 100., 0.01) : *(0.01) : si.smoo;
+dd1 = hslider("[07] Tail density [unit:%]", 70., 0., 100., 0.01) : *(0.01) : si.smoo;
 dd2 = (dr + 0.15) : max(0.25) : min(0.5); /* (cf. table 1 Reverberation parameters) */
-dr = hslider("[07] Decay [unit:%]", 50., 0., 100., 0.01) : *(0.01) : si.smoo;
-damp = hslider("[08] Damping cutoff [unit:Hz] [scale:log]", 10000., 10., 20000., 1.) : si.smoo;
-modf = /*1.0*/hslider("[09] Modulator frequency [unit:Hz]", 1., 0.01, 4., 0.01) : si.smoo;
+dr = hslider("[08] Decay [unit:%]", 50., 0., 100., 0.01) : *(0.01) : si.smoo;
+damp = hslider("[09] Damping cutoff [unit:Hz] [scale:log]", 10000., 10., 20000., 1.);
+modf = /*1.0*/hslider("[10] Modulator frequency [unit:Hz]", 1., 0.01, 4., 0.01) : si.smoo;
 maxModt = 10e-3;
-modt = hslider("[10] Modulator depth [unit:ms]", 0.5, 0., maxModt*1e3, 0.1) : *(1e-3) : si.smoo;
-dry = hslider("[11] Dry amount [unit:%]", 100., 0., 100., 0.01) : *(0.01) : si.smoo;
-wet = hslider("[12] Wet amount [unit:%]", 50., 0., 100., 0.01) : *(0.01) : si.smoo;
+modt = hslider("[11] Modulator depth [unit:ms]", 0.5, 0., maxModt*1e3, 0.1) : *(1e-3) : si.smoo;
+dry = hslider("[12] Dry amount [unit:%]", 100., 0., 100., 0.01) : *(0.01) : si.smoo;
+wet = hslider("[13] Wet amount [unit:%]", 50., 0., 100., 0.01) : *(0.01) : si.smoo;
 /* 0:full stereo, 1:full mono */
 cmix = 0.; //hslider("[12] Stereo cross mix", 0., 0., 1., 0.01) : *(0.5);
 
@@ -48,10 +49,10 @@ with {
   /* before entry into tank */
   /* Note(jpc) different delays left and right in hope to decorrelate more.
      values not documented anywhere, just out of my magic hat */
-  preInjectorL = predelay : toneLpf(tone) :
+  preInjectorL = predelay : toneLpf(tone) : toneHpf(htone) :
                 diffusion(id1, 1.03*T(142)) : diffusion(id1, 0.97*T(107)) :
                 diffusion(id2, 0.97*T(379)) : diffusion(id2, 1.03*T(277));
-  preInjectorR = predelay : toneLpf(tone) :
+  preInjectorR = predelay : toneLpf(tone) : toneHpf(htone) :
                 diffusion(id1, 0.97*T(142)) : diffusion(id1, 1.03*T(107)) :
                 diffusion(id2, 1.03*T(379)) : diffusion(id2, 0.97*T(277));
   /* the default for mixed down mono input */
@@ -71,7 +72,8 @@ with {
   };
 
   predelay = de.delay(ceil(ptMax*ma.SR), int(pt*ma.SR));
-  toneLpf(f) = fi.iir((1.-p), (-p)) with { p = exp(-2.*ma.PI*f/ma.SR); };
+  toneLpf(f) = fi.iir((1.-p), (0.-p)) with { p = exp(-2.*ma.PI*f/ma.SR) : si.smoo; };
+  toneHpf(f) = fi.iir((0.5*(1.+p),-0.5*(1.+p)), (0.-p)) with { p = exp(-2.*ma.PI*f/ma.SR) : si.smoo; };
 
   /* note(jpc) round fixed delays to samples to make it faster */
   diffusion(amt, del) = fi.allpass_comb/*fcomb*/(ceil(del*ma.SR), int(del*ma.SR), amt);
