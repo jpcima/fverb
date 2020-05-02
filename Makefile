@@ -4,12 +4,6 @@ LV2_URI_PREFIX = http://jpcima.sdf1.org/lv2
 PLUGINS := fverb.lv2
 
 all: $(PLUGINS)
-#	# set the plugin categories
-	sed -i 's/a lv2:Plugin ;/a lv2:Plugin, lv2:ReverbPlugin ;/' fverb.lv2/manifest.ttl
-#	# epp:rangeSteps causes problems in some Ardour hosts
-	sed -i '/epp:rangeSteps/d' *.lv2/*.ttl
-#	# fix an error of faust LV2 generator
-	sed -i 's/lv2:optionalFeature lv2:hardRtCapable ;/lv2:optionalFeature lv2:hardRTCapable ;/' *.lv2/*.ttl
 
 clean:
 	rm -rf $(PLUGINS)
@@ -20,5 +14,13 @@ install: all
 
 %.lv2: %.dsp
 	faust2lv2 -uri-prefix $(LV2_URI_PREFIX) $<
+	cp -f lv2-manifests/$@/*.ttl $@/
+# epp:rangeSteps causes problems in some Ardour hosts
+	sed -i '/epp:rangeSteps/d' $@/$*.ttl
+# fix an error of faust LV2 generator
+	sed -i 's/lv2:hardRtCapable/lv2:hardRTCapable/' $@/$*.ttl
+# delete some fields manually overriden
+	sed -i '/doap:license/d' $@/$*.ttl
+	sed -i '/doap:maintainer/d' $@/$*.ttl
 
 .PHONY: all clean install
