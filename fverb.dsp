@@ -65,10 +65,12 @@ with {
     Linear delay interpolation introduces undesired damping artifacts,
     this problem is resolved by using all-pass interpolation instead.
    */
-  fcomb = allpass with {
+  fcomb = smooth/*allpass*/ with {
     linear = fi.allpass_fcomb;
     lagrange = fi.allpass_fcomb5;
     allpass = fi.allpass_fcomb1a;
+    smooth(maxdel, N, aN) = (+ <: de.sdelay(maxdel, int(ma.SR*smoothIt), N-1),*(aN)) ~ *(-aN) : mem,_ : +;
+    smoothIt = 20e-3; // interpolation time for `sdelay`
   };
 
   predelay = de.delay(ceil(ptMax*ma.SR), int(pt*ma.SR));
