@@ -11,8 +11,8 @@ declare license "BSD-2-Clause";
 
 import("stdfaust.lib");
 
-ptMax = 1.;
-pt = hslider("[01] Predelay [unit:s]", 0., 0., ptMax, 0.001) : si.smoo;
+ptMax = 300e-3;
+pt = hslider("[01] Predelay [unit:s]", 0., 0., ptMax, 1e-3) : si.smoo;
 ing = hslider("[02] Input amount [unit:%]", 100., 0., 100., 0.01) : *(0.01) : si.smoo;
 tone = hslider("[03] Input low-pass cutoff [unit:Hz] [scale:log]", 10000., 1., 20000., 1.);
 htone = hslider("[04] Input high-pass cutoff [unit:Hz] [scale:log]", 100., 1., 1000., 1.);
@@ -71,8 +71,8 @@ with {
     allpass = fi.allpass_fcomb1a;
   };
 
-  delayDim(t) = ma.nextpow2(t*maxSR);
-  maxSR = 192000.;
+  delayDim(t) = 65536; // TODO(jpc) expression below does not work?
+  //delayDim(t) = ma.nextpow2(t*maxSR) with { maxSR = 192000. };
 
   predelay = de.delay(delayDim(ptMax), int(pt*ma.SR));
   toneLpf(f) = fi.iir((1.-p), (0.-p)) with { p = exp(-2.*ma.PI*f/ma.SR) : si.smoo; };
