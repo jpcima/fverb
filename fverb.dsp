@@ -11,6 +11,16 @@ declare license "BSD-2-Clause";
 
 import("stdfaust.lib");
 
+//------------------------------------------------------------------------------
+// modified from noises.lib: low frequency noises using distinct noise sources
+mlfnoise0(ns,freq) = ns : ba.latch(os.oscrs(freq));
+mlfnoiseN(N,ns,freq) = mlfnoise0(ns,freq) : fi.lowpass(N,freq); // Nth-order Butterworth lowpass
+mlfnoise(ns,freq) = mlfnoise0(ns,freq) : seq(i,5,fi.lowpass(1,freq)); // non-overshooting lowpass
+declare mlfnoise0 license "LGPL with exception";
+declare mlfnoiseN license "LGPL with exception";
+declare mlfnoise license "LGPL with exception";
+//------------------------------------------------------------------------------
+
 ptMax = 300e-3;
 pt = hslider("[01] Predelay [unit:s]", 0., 0., ptMax, 1e-3) : si.smoo;
 ing = hslider("[02] Input amount [unit:%]", 100., 0., 100., 0.01) : *(0.01) : si.smoo;
@@ -92,8 +102,9 @@ with {
 
   /* prefer a quadrature oscillator if frequency is fixed */
   //dd1OscPair = os.oscq(modf);
+
   /* otherwise use a phase-synchronized pair */
-  dd1OscPair = sine(p), cosine(p) with {
+  /*dd1OscPair = sine(p), cosine(p) with {
     sine(p) = rdtable(tablesize, os.sinwaveform(tablesize), int(p*tablesize));
     cosine(p) = sine(wrap(p+0.25));
     tablesize = 1 << 16;
@@ -101,7 +112,10 @@ with {
   letrec {
     'p = wrap(p+modf*(1./ma.SR));
   };
-  wrap(p) = p-int(p);
+  wrap(p) = p-int(p);*/
+
+  /* decorrelated noise oscillators */
+  dd1OscPair = par(i, 2, mlfnoise(no.noises(2, i), modf));
 
   fixedDelay(t) = de.delay(delayDim(t), int(ma.SR*t));
   modulatedFcomb(t, tMaxExc, tMod, g) = fcomb(delayDim(t+tMaxExc), int(ma.SR*(t+tMod)), g);
