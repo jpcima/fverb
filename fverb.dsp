@@ -75,8 +75,10 @@ with {
   toneLpf(f) = fi.iir((1.-p), (0.-p)) with { p = exp(-2.*ma.PI*f/ma.SR) : si.smoo; };
   toneHpf(f) = fi.iir((0.5*(1.+p),-0.5*(1.+p)), (0.-p)) with { p = exp(-2.*ma.PI*f/ma.SR) : si.smoo; };
 
+k=10;
+
   /* note(jpc) round fixed delays to samples to make it faster */
-  diffusion(amt, del) = fi.allpass_comb/*fcomb*/(ceil(del*ma.SR), int(del*ma.SR), amt);
+  diffusion(amt, del) = fi.allpass_comb/*fcomb*/(k*int(ceil(del*ma.SR)), int(del*ma.SR), amt);
 
   dd1Mod1 = dd1OscPair : (_, !);
   //dd1Mod2 = dd1Mod1;
@@ -101,7 +103,7 @@ with {
   wrap(p) = p-int(p);
 
   fixedDelay(t) = de.delay(ceil(ma.SR*t), int(ma.SR*t));
-  modulatedFcomb(t, tMaxExc, tMod, g) = fcomb(ceil(ma.SR*(t+tMaxExc)), int(ma.SR*(t+tMod)), g);
+  modulatedFcomb(t, tMaxExc, tMod, g) = fcomb(k*int(ceil(ma.SR*(t+tMaxExc))), int(ma.SR*(t+tMod)), g);
 
   ff1A = modulatedFcomb(T(762), maxModt, dd1Mod1*modt, ma.neg(dd1));
   ff1B = fixedDelay(T(4453)) : toneLpf(damp);
