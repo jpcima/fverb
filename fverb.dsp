@@ -64,11 +64,16 @@ with {
     (cf. 1.3.7 Delay Modulation)
     Linear delay interpolation introduces undesired damping artifacts,
     this problem is resolved by using all-pass interpolation instead.
+
+    Note(jpc) I'm told Dual Delay Interpolation aka `sdelay` works better and
+              exhibits less artifacts. The choice of time constant is for now
+              arbitrary, based on some hints in the documentation of `sdelay`.
    */
-  fcomb = allpass with {
+  fcomb = ddi(10e-3)/*allpass*/ with {
     linear = fi.allpass_fcomb;
     lagrange = fi.allpass_fcomb5;
     allpass = fi.allpass_fcomb1a;
+    ddi(it, maxdel, N, aN) = (+ <: de.sdelay(maxdel, int(ma.SR*it), N-1),*(aN)) ~ *(-aN) : mem,_ : +;
   };
 
   delayDim(t) = 65536; // TODO(jpc) expression below does not work?
