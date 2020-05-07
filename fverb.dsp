@@ -30,6 +30,8 @@ wet = hslider("[13] Wet amount [unit:%]", 50., 0., 100., 0.01) : *(0.01) : si.sm
 /* 0:full stereo, 1:full mono */
 cmix = 0.; //hslider("[12] Stereo cross mix", 0., 0., 1., 0.01) : *(0.5);
 
+em = hslider("[14] Emphasis [unit:%]", 0., 0., 100., 0.01) : *(0.01) : si.smoo;
+
 /* for complete control of decay parameters */
 // dd1 = hslider("[05] Decay diffusion 1 [unit:%]", 70., 0., 100., 0.01) : *(0.01) : si.smoo;
 // dd2 = hslider("[06] Decay diffusion 2 [unit:%]", 50., 0., 100., 0.01) : *(0.01) : si.smoo;
@@ -114,11 +116,15 @@ with {
   ff1A = modulatedFcomb(T(762), maxModt, dd1Mod1*modt, ma.neg(dd1));
   ff1B = fixedDelay(T(4453)) : toneLpf(damp);
   ff1C = *(dr) : diffusion(ma.neg(dd2), T(1800));
-  fb1 = fixedDelay(T(3720)) : *(dr);
+  fb1 = fixedDelay(T(3720)) : *(dr) : emphasis;
   ff2A = modulatedFcomb(T(908), maxModt, dd1Mod2*modt, ma.neg(dd1));
   ff2B = fixedDelay(T(4217)) : toneLpf(damp);
   ff2C = *(dr) : diffusion(ma.neg(dd2), T(2656));
-  fb2 = fixedDelay(T(3163)) : *(dr);
+  fb2 = fixedDelay(T(3163)) : *(dr) : emphasis;
+
+  emphasis = _ <: (_, (toneLpf(632.) : *(em))) :> + : *(attenuate) with {
+    attenuate = (1./sqrt(2.))/sqrt(0.5+em*(1./sqrt(2.)));
+  };
 
   outputReconstruction(n1, n2, n3, n4, n5, n6) =
     0.6*sum(i, 7, lTap(i)), 0.6*sum(i, 7, rTap(i))
