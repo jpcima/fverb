@@ -12,21 +12,21 @@ declare license "BSD-2-Clause";
 import("stdfaust.lib");
 
 ptMax = 300e-3;
-pt = hslider("[01] Predelay [unit:s]", 0., 0., ptMax, 1e-3) : si.smoo;
-ing = hslider("[02] Input amount [unit:%]", 100., 0., 100., 0.01) : *(0.01) : si.smoo;
-tone = hslider("[03] Input low-pass cutoff [unit:Hz] [scale:log]", 10000., 1., 20000., 1.);
-htone = hslider("[04] Input high-pass cutoff [unit:Hz] [scale:log]", 100., 1., 1000., 1.);
-id1 = hslider("[05] Input diffusion 1 [unit:%]", 75., 0., 100., 0.01) : *(0.01) : si.smoo;
-id2 = hslider("[06] Input diffusion 2 [unit:%]", 62.5, 0., 100., 0.01) : *(0.01) : si.smoo;
-dd1 = hslider("[07] Tail density [unit:%]", 70., 0., 100., 0.01) : *(0.01) : si.smoo;
+pt = hslider("[01] Predelay [symbol:predelay] [unit:ms]", 0., 0., ptMax*1e3, 1.) : *(1e-3) : si.smoo;
+ing = hslider("[02] Input amount [symbol:input] [unit:%]", 100., 0., 100., 0.01) : *(0.01) : si.smoo;
+tone = hslider("[03] Input low-pass cutoff [symbol:input_lowpass] [unit:Hz] [scale:log]", 10000., 1., 20000., 1.);
+htone = hslider("[04] Input high-pass cutoff [symbol:input_highpass] [unit:Hz] [scale:log]", 100., 1., 1000., 1.);
+id1 = hslider("[05] Input diffusion 1 [symbol:input_diffusion_1] [unit:%]", 75., 0., 100., 0.01) : *(0.01) : si.smoo;
+id2 = hslider("[06] Input diffusion 2 [symbol:input_diffusion_2] [unit:%]", 62.5, 0., 100., 0.01) : *(0.01) : si.smoo;
+dd1 = hslider("[07] Tail density [symbol:tail_density] [unit:%]", 70., 0., 100., 0.01) : *(0.01) : si.smoo;
 dd2 = (dr + 0.15) : max(0.25) : min(0.5); /* (cf. table 1 Reverberation parameters) */
-dr = hslider("[08] Decay [unit:%]", 50., 0., 100., 0.01) : *(0.01) : si.smoo;
-damp = hslider("[09] Damping cutoff [unit:Hz] [scale:log]", 10000., 10., 20000., 1.);
-modf = /*1.0*/hslider("[10] Modulator frequency [unit:Hz]", 1., 0.01, 4., 0.01) : si.smoo;
+dr = hslider("[08] Decay [symbol:decay] [unit:%]", 50., 0., 100., 0.01) : *(0.01) : si.smoo;
+damp = hslider("[09] Damping [symbol:damping] [unit:Hz] [scale:log]", 5500., 10., 20000., 1.);
+modf = /*1.0*/hslider("[10] Modulator frequency [symbol:mod_frequency] [unit:Hz]", 1., 0.01, 4., 0.01) : si.smoo;
 maxModt = 10e-3;
-modt = hslider("[11] Modulator depth [unit:ms]", 0.5, 0., maxModt*1e3, 0.1) : *(1e-3) : si.smoo;
-dry = hslider("[12] Dry amount [unit:%]", 100., 0., 100., 0.01) : *(0.01) : si.smoo;
-wet = hslider("[13] Wet amount [unit:%]", 50., 0., 100., 0.01) : *(0.01) : si.smoo;
+modt = hslider("[11] Modulator depth [symbol:mod_depth] [unit:ms]", 0.5, 0., maxModt*1e3, 0.1) : *(1e-3) : si.smoo;
+dry = hslider("[12] Dry [symbol:dry] [unit:%]", 100., 0., 100., 0.01) : *(0.01) : si.smoo;
+wet = hslider("[13] Wet [symbol:wet] [unit:%]", 50., 0., 100., 0.01) : *(0.01) : si.smoo;
 /* 0:full stereo, 1:full mono */
 cmix = 0.; //hslider("[12] Stereo cross mix", 0., 0., 1., 0.01) : *(0.5);
 

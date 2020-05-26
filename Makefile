@@ -1,26 +1,53 @@
-PREFIX ?= /usr/local
-LV2_URI_PREFIX = http://jpcima.sdf1.org/lv2
+#!/usr/bin/make -f
+# Makefile for DISTRHO Plugins #
+# ---------------------------- #
+# Created by falkTX, Christopher Arndt, and Patrick Desaulniers
+#
 
-PLUGINS := fverb.lv2
+include dpf/Makefile.base.mk
 
-all: $(PLUGINS)
+all: libs plugins gen
+
+# --------------------------------------------------------------
+
+submodules:
+	git submodule update --init --recursive
+
+libs:
+
+plugins: libs
+	$(MAKE) all -C plugins/fverb
+
+ifneq ($(CROSS_COMPILING),true)
+gen: plugins dpf/utils/lv2_ttl_generator
+	@$(CURDIR)/dpf/utils/generate-ttl.sh
+ifeq ($(MACOS),true)
+	@$(CURDIR)/dpf/utils/generate-vst-bundles.sh
+endif
+
+dpf/utils/lv2_ttl_generator:
+	$(MAKE) -C dpf/utils/lv2-ttl-generator
+else
+gen: plugins dpf/utils/lv2_ttl_generator.exe
+	@$(CURDIR)/dpf/utils/generate-ttl.sh
+
+dpf/utils/lv2_ttl_generator.exe:
+	$(MAKE) -C dpf/utils/lv2-ttl-generator WINDOWS=true
+endif
+
+# --------------------------------------------------------------
 
 clean:
-	rm -rf $(PLUGINS)
+	$(MAKE) clean -C dpf/utils/lv2-ttl-generator
+	$(MAKE) clean -C plugins/fverb
+	rm -rf bin build
 
 install: all
-	install -d $(DESTDIR)$(PREFIX)/lib/lv2
-	$(foreach g,$(PLUGINS),cp -rfd $(g) $(DESTDIR)$(PREFIX)/lib/lv2;)
+	$(MAKE) install -C plugins/fverb
 
-%.lv2: %.dsp
-	faust2lv2 -uri-prefix $(LV2_URI_PREFIX) $<
-	cp -f lv2-manifests/$@/*.ttl $@/
-# epp:rangeSteps causes problems in some Ardour hosts
-	sed -i '/epp:rangeSteps/d' $@/$*.ttl
-# fix an error of faust LV2 generator
-	sed -i 's/lv2:hardRtCapable/lv2:hardRTCapable/' $@/$*.ttl
-# delete some fields manually overriden
-	sed -i '/doap:license/d' $@/$*.ttl
-	sed -i '/doap:maintainer/d' $@/$*.ttl
+install-user: all
+	$(MAKE) install-user -C plugins/fverb
 
-.PHONY: all clean install
+# --------------------------------------------------------------
+
+.PHONY: all clean install install-user submodule libs plugins gen
