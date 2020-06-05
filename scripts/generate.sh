@@ -14,3 +14,11 @@ faustpp -a scripts/architecture/generic.cpp -DIdentifier=Fverb fverb.dsp \
 
 clang-format -i plugins/fverb/dsp/Fverb.hpp
 clang-format -i plugins/fverb/dsp/Fverb.cpp
+
+faustpp -a scripts/architecture/generic.hpp -DIdentifier=Fshim fshim.dsp \
+        > plugins/fshim/dsp/Fshim.hpp
+faustpp -a scripts/architecture/generic.cpp -DIdentifier=Fshim fshim.dsp \
+        > plugins/fshim/dsp/Fshim.cpp
+
+clang-format -i plugins/fshim/dsp/Fshim.hpp
+clang-format -i plugins/fshim/dsp/Fshim.cpp

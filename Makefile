@@ -6,6 +6,8 @@
 
 include dpf/Makefile.base.mk
 
+PLUGINS := fverb fshim
+
 all: libs plugins gen
 
 # --------------------------------------------------------------
@@ -16,7 +18,7 @@ submodules:
 libs:
 
 plugins: libs
-	$(MAKE) all -C plugins/fverb
+	$(foreach p,$(PLUGINS),$(MAKE) all -C plugins/$(p);)
 
 ifneq ($(CROSS_COMPILING),true)
 gen: plugins dpf/utils/lv2_ttl_generator
@@ -39,14 +41,14 @@ endif
 
 clean:
 	$(MAKE) clean -C dpf/utils/lv2-ttl-generator
-	$(MAKE) clean -C plugins/fverb
+	$(foreach p,$(PLUGINS),$(MAKE) clean -C plugins/$(p);)
 	rm -rf bin build
 
 install: all
-	$(MAKE) install -C plugins/fverb
+	$(foreach p,$(PLUGINS),$(MAKE) install -C plugins/$(p);)
 
 install-user: all
-	$(MAKE) install-user -C plugins/fverb
+	$(foreach p,$(PLUGINS),$(MAKE) install-user -C plugins/$(p);)
 
 # --------------------------------------------------------------
 
