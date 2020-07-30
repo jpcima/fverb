@@ -30,29 +30,36 @@ wet = hslider("[13] Wet [symbol:wet] [unit:%]", 50., 0., 100., 0.01) : *(0.01) :
 /* 0:full stereo, 1:full mono */
 cmix = 0.; //hslider("[12] Stereo cross mix", 0., 0., 1., 0.01) : *(0.5);
 
+erg = hslider("[14] Early reflections [symbol:early_reflections] [unit:%]", 50., 0., 100., 0.01) : *(0.01) : si.smoo;
+lrg = hslider("[15] Late reflections [symbol:late_reflections] [unit:%]", 100., 0., 100., 0.01) : *(0.01) : si.smoo;
+
 /* for complete control of decay parameters */
 // dd1 = hslider("[05] Decay diffusion 1 [unit:%]", 70., 0., 100., 0.01) : *(0.01) : si.smoo;
 // dd2 = hslider("[06] Decay diffusion 2 [unit:%]", 50., 0., 100., 0.01) : *(0.01) : si.smoo;
 
 fverb(lIn, rIn) =
-  ((preInL : preInjectorL), (preInR : preInjectorR)) :
-  crossInjector(ff1A, ff1B, ff1C, fb1, ff2A, ff2B, ff2C, fb2) :
-  outputReconstruction
+  ((early : par(i, 2, *(erg))),
+   (late : par(i, 2, *(lrg)))) :> (_, _)
 with {
   // this reverb was designed for nominal rate of 29761 Hz
   T(x) = x/refSR with { refSR = 29761.; }; // reference time to seconds
 
   // stereo input (reference was mono downmixed)
-  preInL = (1.-cmix)*lIn+cmix*rIn : *(ing);
-  preInR = (1.-cmix)*rIn+cmix*lIn : *(ing);
+  preInL = ((1.-cmix)*lIn+cmix*rIn : *(ing)) : toneLpf(tone) : toneHpf(htone);
+  preInR = ((1.-cmix)*rIn+cmix*lIn : *(ing)) : toneLpf(tone) : toneHpf(htone);
+
+  // late reverb model
+  late = ((preInL : preInjectorL), (preInR : preInjectorR)) :
+         crossInjector(ff1A, ff1B, ff1C, fb1, ff2A, ff2B, ff2C, fb2) :
+         outputReconstruction;
 
   /* before entry into tank */
   /* Note(jpc) different delays left and right in hope to decorrelate more.
      values not documented anywhere, just out of my magic hat */
-  preInjectorL = predelay : toneLpf(tone) : toneHpf(htone) :
+  preInjectorL = predelay :
                 diffusion(id1, 1.03*T(142)) : diffusion(id1, 0.97*T(107)) :
                 diffusion(id2, 0.97*T(379)) : diffusion(id2, 1.03*T(277));
-  preInjectorR = predelay : toneLpf(tone) : toneHpf(htone) :
+  preInjectorR = predelay :
                 diffusion(id1, 0.97*T(142)) : diffusion(id1, 1.03*T(107)) :
                 diffusion(id2, 1.03*T(379)) : diffusion(id2, 0.97*T(277));
   /* the default for mixed down mono input */
@@ -172,6 +179,48 @@ with {
     'A2 = C1 : fb2 : +(in2) : ff2A;
     'B2 = C1 : fb2 : +(in2) : ff2A : ff2B;
     'C2 = C1 : fb2 : +(in2) : ff2A : ff2B : ff2C;
+  };
+
+  // James Moore early reverb model
+  early =
+    /* mono */    //(0.5*(preInL+preInR)) : moorerEr <: (_, _)
+    /* stereo */  (preInL, preInR) : moorerErStereo : crossMix(0.25)
+  with {
+    moorerEr(x) = sum(i, 18, (x : tap(i))) with {
+      tap(i) = fixedDelay(moorerDelay(i)) : *(moorerGain(i));
+    };
+
+    /* Note(jpc) Stereo version off my magic hat */
+    /*           cross-channel mix, decorrelations left and right */
+    moorerErStereo(l, r) = sum(i, 18, (l : lTap(i))), sum(i, 18, (r : rTap(i)))
+    with {
+      lTap(i) = fixedDelay(moorerDelay(i) : decorrelate(i, 0)) : *(moorerGain(i) : decorrelate(i, 0));
+      rTap(i) = fixedDelay(moorerDelay(i) : decorrelate(i, 1)) : *(moorerGain(i) : decorrelate(i, 1));
+      decorrelate(i, d) = *(ba.if((i & 1) == d, 1.03, 0.97));
+    };
+
+    moorerDelay(0)  = moorerT(190); moorerGain(0) = 0.841;
+    moorerDelay(1)  = moorerT(759); moorerGain(1) = 0.504;
+    moorerDelay(2)  = moorerT(44);  moorerGain(2) = 0.490;
+    moorerDelay(3)  = moorerT(190); moorerGain(3) = 0.379;
+    moorerDelay(4)  = moorerT(9);   moorerGain(4) = 0.380;
+    moorerDelay(5)  = moorerT(123); moorerGain(5) = 0.346;
+    moorerDelay(6)  = moorerT(706); moorerGain(6) = 0.289;
+    moorerDelay(7)  = moorerT(119); moorerGain(7) = 0.272;
+    moorerDelay(8)  = moorerT(384); moorerGain(8) = 0.192;
+    moorerDelay(9)  = moorerT(66);  moorerGain(9) = 0.193;
+    moorerDelay(10) = moorerT(35);  moorerGain(10) = 0.217;
+    moorerDelay(11) = moorerT(75);  moorerGain(11) = 0.181;
+    moorerDelay(12) = moorerT(419); moorerGain(12) = 0.180;
+    moorerDelay(13) = moorerT(4);   moorerGain(13) = 0.181;
+    moorerDelay(14) = moorerT(79);  moorerGain(14) = 0.176;
+    moorerDelay(15) = moorerT(66);  moorerGain(15) = 0.142;
+    moorerDelay(16) = moorerT(53);  moorerGain(16) = 0.167;
+    moorerDelay(17) = moorerT(194); moorerGain(17) = 0.134;
+
+    moorerT(x) = x/refSR with { refSR = 44100.; }; // reference time to seconds
+
+    crossMix(c, l, r) = (l*(1.-c)+r*c), (r*(1.-c)+l*c);
   };
 };
 

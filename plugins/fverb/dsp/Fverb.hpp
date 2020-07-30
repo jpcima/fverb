@@ -31,9 +31,9 @@ public:
 
     enum { NumInputs = 2 };
     enum { NumOutputs = 2 };
-    enum { NumActives = 13 };
+    enum { NumActives = 15 };
     enum { NumPassives = 0 };
-    enum { NumParameters = 13 };
+    enum { NumParameters = 15 };
 
     enum Parameter {
         p_predelay,
@@ -49,6 +49,8 @@ public:
         p_mod_depth,
         p_dry,
         p_wet,
+        p_early_reflections,
+        p_late_reflections,
 
     };
 
@@ -98,6 +100,10 @@ public:
 
     float get_wet() const noexcept;
 
+    float get_early_reflections() const noexcept;
+
+    float get_late_reflections() const noexcept;
+
 
     void set_predelay(float value) noexcept;
 
@@ -124,6 +130,10 @@ public:
     void set_dry(float value) noexcept;
 
     void set_wet(float value) noexcept;
+
+    void set_early_reflections(float value) noexcept;
+
+    void set_late_reflections(float value) noexcept;
 
 
 public:
