@@ -220,7 +220,10 @@ with {
 
     moorerT(x) = x/refSR with { refSR = 44100.; }; // reference time to seconds
 
-    crossMix(c, l, r) = (l*(1.-c)+r*c), (r*(1.-c)+l*c);
+    crossMix(c, l, r) = (l*directGain+r*crossGain), (r*directGain+l*crossGain) with {
+      directGain = cos(0.5*ma.PI*c);
+      crossGain = sin(0.5*ma.PI*c);
+    };
   };
 };
 
