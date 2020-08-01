@@ -12,7 +12,7 @@ declare license "BSD-2-Clause";
 import("stdfaust.lib");
 
 ptMax = 300e-3;
-pt = hslider("[01] Predelay [symbol:predelay] [unit:ms]", 0., 0., ptMax*1e3, 1.) : *(1e-3) : si.smoo;
+pt = hslider("[01] Predelay [symbol:predelay] [unit:ms]", 80., 0., ptMax*1e3, 1.) : *(1e-3) : si.smoo;
 ing = hslider("[02] Input amount [symbol:input] [unit:%]", 100., 0., 100., 0.01) : *(0.01) : si.smoo;
 tone = hslider("[03] Input low-pass cutoff [symbol:input_lowpass] [unit:Hz] [scale:log]", 10000., 1., 20000., 1.);
 htone = hslider("[04] Input high-pass cutoff [symbol:input_highpass] [unit:Hz] [scale:log]", 100., 1., 1000., 1.);
