@@ -199,24 +199,24 @@ with {
       decorrelate(i, d) = *(ba.if((i & 1) == d, 1.03, 0.97));
     };
 
-    moorerDelay(0)  = moorerT(190); moorerGain(0) = 0.841;
-    moorerDelay(1)  = moorerT(759); moorerGain(1) = 0.504;
-    moorerDelay(2)  = moorerT(44);  moorerGain(2) = 0.490;
-    moorerDelay(3)  = moorerT(190); moorerGain(3) = 0.379;
-    moorerDelay(4)  = moorerT(9);   moorerGain(4) = 0.380;
-    moorerDelay(5)  = moorerT(123); moorerGain(5) = 0.346;
-    moorerDelay(6)  = moorerT(706); moorerGain(6) = 0.289;
-    moorerDelay(7)  = moorerT(119); moorerGain(7) = 0.272;
-    moorerDelay(8)  = moorerT(384); moorerGain(8) = 0.192;
-    moorerDelay(9)  = moorerT(66);  moorerGain(9) = 0.193;
-    moorerDelay(10) = moorerT(35);  moorerGain(10) = 0.217;
-    moorerDelay(11) = moorerT(75);  moorerGain(11) = 0.181;
-    moorerDelay(12) = moorerT(419); moorerGain(12) = 0.180;
-    moorerDelay(13) = moorerT(4);   moorerGain(13) = 0.181;
-    moorerDelay(14) = moorerT(79);  moorerGain(14) = 0.176;
-    moorerDelay(15) = moorerT(66);  moorerGain(15) = 0.142;
-    moorerDelay(16) = moorerT(53);  moorerGain(16) = 0.167;
-    moorerDelay(17) = moorerT(194); moorerGain(17) = 0.134;
+    moorerDelay(0)  = moorerT(190);  moorerGain(0) = 0.841;
+    moorerDelay(1)  = moorerT(949);  moorerGain(1) = 0.504;
+    moorerDelay(2)  = moorerT(993);  moorerGain(2) = 0.490;
+    moorerDelay(3)  = moorerT(1183); moorerGain(3) = 0.379;
+    moorerDelay(4)  = moorerT(1192); moorerGain(4) = 0.380;
+    moorerDelay(5)  = moorerT(1315); moorerGain(5) = 0.346;
+    moorerDelay(6)  = moorerT(2021); moorerGain(6) = 0.289;
+    moorerDelay(7)  = moorerT(2140); moorerGain(7) = 0.272;
+    moorerDelay(8)  = moorerT(2524); moorerGain(8) = 0.192;
+    moorerDelay(9)  = moorerT(2590); moorerGain(9) = 0.193;
+    moorerDelay(10) = moorerT(2625); moorerGain(10) = 0.217;
+    moorerDelay(11) = moorerT(2700); moorerGain(11) = 0.181;
+    moorerDelay(12) = moorerT(3119); moorerGain(12) = 0.180;
+    moorerDelay(13) = moorerT(3123); moorerGain(13) = 0.181;
+    moorerDelay(14) = moorerT(3203); moorerGain(14) = 0.176;
+    moorerDelay(15) = moorerT(3268); moorerGain(15) = 0.142;
+    moorerDelay(16) = moorerT(3321); moorerGain(16) = 0.167;
+    moorerDelay(17) = moorerT(3515); moorerGain(17) = 0.134;
 
     moorerT(x) = x/refSR with { refSR = 44100.; }; // reference time to seconds
 
