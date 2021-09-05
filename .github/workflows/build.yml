@@ -47,6 +47,7 @@ jobs:
       release_arch: ${{ matrix.release-arch }}
       build_type: ${{ matrix.build-type }}
       num_jobs: 2
+      codesign_identity: Jean Pierre Cimalando
     steps:
       - uses: actions/checkout@v2
         with:
@@ -83,7 +84,7 @@ jobs:
         if: ${{ matrix.os-type == 'macOS' && github.event_name != 'pull_request' }}
         working-directory: ${{runner.workspace}}/build
         run: |
-          codesign --sign "${CODESIGN_IDENTITY}" --keychain signing_temp.keychain --deep --force --verbose bin/*.vst
+          codesign --sign "${codesign_identity}" --keychain signing_temp.keychain --deep --force --verbose bin/*.vst
       - uses: actions/upload-artifact@v2
         with:
           name: Fverb for ${{ matrix.display-name }}
