@@ -70,7 +70,7 @@ jobs:
         if: ${{ matrix.os-type == 'Windows' }}
         working-directory: ${{ runner.workspace }}/build
         run: cmake --build . --config "${Env:build_type}" -j "${Env:num_jobs}"
-      - name: Build (Linux)
+      - name: Build (Linux/macOS)
         if: ${{ matrix.os-type == 'Linux' || matrix.os-type == 'macOS' }}
         working-directory: ${{ runner.workspace }}/build
         run: cmake --build . --config "${build_type}" -j "${num_jobs}"
