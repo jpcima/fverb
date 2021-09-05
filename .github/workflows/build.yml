@@ -74,7 +74,17 @@ jobs:
         if: ${{ matrix.os-type == 'Linux' || matrix.os-type == 'macOS' }}
         working-directory: ${{ runner.workspace }}/build
         run: cmake --build . --config "${build_type}" -j "${num_jobs}"
+      - uses: apple-actions/import-codesign-certs@v1
+        if: ${{ matrix.os-type == 'macOS' && github.event_name != 'pull_request' }}
+        with:
+          p12-file-base64: ${{ secrets.CERTIFICATES_P12 }}
+          p12-password: ${{ secrets.CERTIFICATES_P12_PASSWORD }}
+      - name: Sign
+        if: ${{ matrix.os-type == 'macOS' && github.event_name != 'pull_request' }}
+        working-directory: ${{runner.workspace}}/build
+        run: |
+          codesign --sign "${CODESIGN_IDENTITY}" --keychain signing_temp.keychain --deep --force --verbose bin/*.vst
       - uses: actions/upload-artifact@v2
         with:
-          name: Fabric for ${{ matrix.display-name }}
+          name: Fverb for ${{ matrix.display-name }}
           path: "${{runner.workspace}}/build/bin/*"
