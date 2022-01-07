@@ -26,3 +26,17 @@ if(MSVC)
 else()
   target_compile_options(fverb PRIVATE "-ffast-math")
 endif()
+
+###
+add_library(WDL STATIC
+  "sources/WDLex/resampleMOD.cpp"
+  "sources/WDLex/resampleMOD.h")
+target_compile_definitions(WDL PUBLIC
+  "WDL_RESAMPLE_TYPE=float"
+  "WDL_RESAMPLE_RATIONAL")
+target_include_directories(WDL PUBLIC
+  "sources"
+  "thirdparty/WDL")
+
+###
+target_link_libraries(fverb PUBLIC WDL)
