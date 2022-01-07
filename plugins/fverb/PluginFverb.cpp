@@ -54,7 +54,7 @@ void PluginFverb::initParameter(uint32_t index, Parameter &parameter)
     }
     index -= pIdDspFirst;
 
-    parameter.hints = kParameterIsAutomable;
+    parameter.hints = kParameterIsAutomatable;
 
     parameter.name = Fverb::parameter_label(index);
     parameter.shortName = Fverb::parameter_short_label(index);
