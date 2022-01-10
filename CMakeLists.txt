@@ -39,4 +39,8 @@ target_include_directories(WDL PUBLIC
   "thirdparty/WDL")
 
 ###
-target_link_libraries(fverb PUBLIC WDL)
+add_library(DISTRHO INTERFACE)
+target_include_directories(DISTRHO INTERFACE "thirdparty/DISTRHO/sources")
+
+###
+target_link_libraries(fverb PUBLIC WDL DISTRHO)

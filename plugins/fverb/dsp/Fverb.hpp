@@ -31,9 +31,9 @@ public:
 
     enum { NumInputs = 2 };
     enum { NumOutputs = 2 };
-    enum { NumActives = 13 };
+    enum { NumActives = 11 };
     enum { NumPassives = 0 };
-    enum { NumParameters = 13 };
+    enum { NumParameters = 11 };
 
     enum Parameter {
         p_predelay,
@@ -47,8 +47,6 @@ public:
         p_damping,
         p_mod_frequency,
         p_mod_depth,
-        p_dry,
-        p_wet,
 
     };
 
@@ -94,10 +92,6 @@ public:
 
     float get_mod_depth() const noexcept;
 
-    float get_dry() const noexcept;
-
-    float get_wet() const noexcept;
-
 
     void set_predelay(float value) noexcept;
 
@@ -120,10 +114,6 @@ public:
     void set_mod_frequency(float value) noexcept;
 
     void set_mod_depth(float value) noexcept;
-
-    void set_dry(float value) noexcept;
-
-    void set_wet(float value) noexcept;
 
 
 public:

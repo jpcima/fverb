@@ -18,6 +18,8 @@ enum {
     pIdBypass,
     pIdDspFirst,
     pIdDspLast = pIdDspFirst + Fverb::NumActives - 1,
+    pIdDry,
+    pIdWet,
     pIdVintage,
     kNumParameters,
 };
@@ -38,6 +40,10 @@ PluginFverb::PluginFverb()
         setParameterValue(p, param.ranges.def);
     }
 
+    float tau = 5e-3;
+    fDry.setTimeConstant(tau);
+    fWet.setTimeConstant(tau);
+
     sampleRateChanged(getSampleRate());
 }
 
@@ -56,9 +62,28 @@ void PluginFverb::initParameter(uint32_t index, Parameter &parameter)
     case pIdBypass:
         parameter.initDesignation(kParameterDesignationBypass);
         return;
+    case pIdDry:
+        parameter.hints = kParameterIsAutomatable;
+        parameter.name = "Dry";
+        parameter.symbol = "dry";
+        parameter.ranges.def = 0;
+        parameter.ranges.min = 0;
+        parameter.ranges.max = 100;
+        parameter.unit = "%";
+        return;
+    case pIdWet:
+        parameter.hints = kParameterIsAutomatable;
+        parameter.name = "Wet";
+        parameter.symbol = "wet";
+        parameter.ranges.def = 0;
+        parameter.ranges.min = 0;
+        parameter.ranges.max = 100;
+        parameter.unit = "%";
+        return;
     case pIdVintage:
         parameter.hints = kParameterIsAutomatable;
         parameter.name = "Vintage";
+        parameter.symbol = "vintage";
         parameter.hints |= kParameterIsBoolean|kParameterIsInteger;
         parameter.ranges.def = 0;
         parameter.ranges.min = 0;
@@ -101,6 +126,12 @@ void PluginFverb::sampleRateChanged(double newSampleRate)
 {
     fDsp->init(fVintage ? kVintageSampleRate : newSampleRate);
 
+    fDry.setSampleRate(newSampleRate);
+    fWet.setSampleRate(newSampleRate);
+
+    for (uint32_t ch = 0; ch < kNumChannels; ++ch)
+        fInputKeep[ch].resize(kMaxResampledBlock);
+
     fDownsampler.SetRates((int)newSampleRate, kVintageSampleRate);
     fUpsampler.SetRates(kVintageSampleRate, (int)newSampleRate);
 
@@ -125,6 +156,10 @@ float PluginFverb::getParameterValue(uint32_t index) const
     switch (index) {
     case pIdBypass:
         return fBypass;
+    case pIdDry:
+        return fDry.getTarget() * 100;
+    case pIdWet:
+        return fWet.getTarget() * 100;
     case pIdVintage:
         return fVintage;
     }
@@ -145,6 +180,12 @@ void PluginFverb::setParameterValue(uint32_t index, float value)
     switch (index) {
     case pIdBypass:
         fBypass = value;
+        return;
+    case pIdDry:
+        fDry.setTarget(value / 100);
+        return;
+    case pIdWet:
+        fWet.setTarget(value / 100);
         return;
     case pIdVintage:
         fVintage = value >= 0.5f;
@@ -206,10 +247,7 @@ void PluginFverb::run(const float **inputs, float **outputs, uint32_t frames)
             clear();
             fWasVintage = fVintage;
         }
-        if (!fVintage)
-            runAtNormalRate(inputs, outputs, frames);
-        else
-            runDownsampled(inputs, outputs, frames);
+        runSegmented(inputs, outputs, frames);
     }
     else {
         for (uint32_t ch = 0; ch < kNumChannels; ++ch) {
@@ -224,6 +262,9 @@ void PluginFverb::clear()
 {
     fDsp->clear();
 
+    fDry.clearToTarget();
+    fWet.clearToTarget();
+
     fDownsampler.Reset();
     fUpsampler.Reset();
 
@@ -231,16 +272,14 @@ void PluginFverb::clear()
         fLastDspOutputs[ch] = 0;
 }
 
-void PluginFverb::runAtNormalRate(const float **inputs, float **outputs, uint32_t frames)
+void PluginFverb::runSegmented(const float **inputs, float **outputs, uint32_t frames)
 {
-    fDsp->process(inputs[0], inputs[1], outputs[0], outputs[1], frames);
+    float *inputKeep[kNumChannels];
+    for (uint32_t ch = 0; ch < kNumChannels; ++ch) {
+        inputKeep[ch] = fInputKeep[ch].data();
+        std::copy_n(inputs[ch], frames, inputKeep[ch]);
+    }
 
-    for (uint32_t ch = 0; ch < kNumChannels; ++ch)
-        fLastDspOutputs[ch] = outputs[ch][frames - 1];
-}
-
-void PluginFverb::runDownsampled(const float **inputs, float **outputs, uint32_t frames)
-{
     uint32_t index = 0;
     while (index < frames) {
         uint32_t bs = frames - index;
@@ -254,12 +293,56 @@ void PluginFverb::runDownsampled(const float **inputs, float **outputs, uint32_t
         for (uint32_t ch = 0; ch < kNumChannels; ++ch)
             offsetOutputs[ch] = outputs[ch] + index;
 
-        runDownsampled_(offsetInputs, offsetOutputs, bs);
+        if (!fVintage)
+            runAtNormalRate(offsetInputs, offsetOutputs, bs);
+        else
+            runDownsampled(offsetInputs, offsetOutputs, bs);
+
         index += bs;
+    }
+
+    ///
+    if (fWet.getCurrentValue() == fWet.getTarget()) {
+        float wet = fWet.getCurrentValue();
+        for (uint32_t i = 0; i < frames; ++i) {
+            for (uint32_t ch = 0; ch < kNumChannels; ++ch)
+                outputs[ch][i] *= wet;
+        }
+    }
+    else {
+        for (uint32_t i = 0; i < frames; ++i) {
+            float wet = fWet.next();
+            for (uint32_t ch = 0; ch < kNumChannels; ++ch)
+                outputs[ch][i] *= wet;
+        }
+    }
+
+    ///
+    if (fDry.getCurrentValue() == fDry.getTarget()) {
+        float dry = fDry.getCurrentValue();
+        for (uint32_t i = 0; i < frames; ++i) {
+            for (uint32_t ch = 0; ch < kNumChannels; ++ch)
+                outputs[ch][i] += dry * inputKeep[ch][i];
+        }
+    }
+    else {
+        for (uint32_t i = 0; i < frames; ++i) {
+            float dry = fDry.next();
+            for (uint32_t ch = 0; ch < kNumChannels; ++ch)
+                outputs[ch][i] += dry * inputKeep[ch][i];
+        }
     }
 }
 
-void PluginFverb::runDownsampled_(const float **inputs, float **outputs, uint32_t frames)
+void PluginFverb::runAtNormalRate(const float **inputs, float **outputs, uint32_t frames)
+{
+    fDsp->process(inputs[0], inputs[1], outputs[0], outputs[1], frames);
+
+    for (uint32_t ch = 0; ch < kNumChannels; ++ch)
+        fLastDspOutputs[ch] = outputs[ch][frames - 1];
+}
+
+void PluginFverb::runDownsampled(const float **inputs, float **outputs, uint32_t frames)
 {
     uint32_t dspCount;
     float *dspIn[kNumChannels];
