@@ -8,6 +8,10 @@
 
 #pragma once
 #include "DistrhoPlugin.hpp"
+#include "WDLex/resampleMOD.h"
+#include "LinearSmoother.hpp"
+#include <vector>
+#include <array>
 #include <memory>
 
 class Fverb;
@@ -88,13 +92,43 @@ protected:
 
     void run(const float **, float **outputs, uint32_t frames) override;
 
+    void clear();
+
+    // -------------------------------------------------------------------
+private:
+    void runSegmented(const float **inputs, float **outputs, uint32_t frames);
+    void runAtNormalRate(const float **inputs, float **outputs, uint32_t frames);
+    void runDownsampled(const float **inputs, float **outputs, uint32_t frames);
 
     // -------------------------------------------------------------------
 
 private:
+    enum {
+        kNumChannels = DISTRHO_PLUGIN_NUM_OUTPUTS,
+    };
+
+private:
     std::unique_ptr<Fverb> fDsp;
+
     float fBypass = 0;
     bool fWasBypass = false;
+
+    bool fVintage = false;
+    bool fWasVintage = false;
+
+    LinearSmoother fDry;
+    LinearSmoother fWet;
+
+    WDL_Resampler fDownsampler;
+    WDL_Resampler fUpsampler;
+
+    std::array<float, kNumChannels> fLastDspOutputs{};
+
+    std::vector<float> fInputKeep[kNumChannels];
+    std::vector<float> fDownsamplerOut;
+    std::vector<float> fUpsamplerOut;
+    std::vector<float> fDspIn[kNumChannels];
+    std::vector<float> fDspOut[kNumChannels];
 
     DISTRHO_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginFverb)
 };

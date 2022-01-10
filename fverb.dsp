@@ -175,6 +175,6 @@ with {
   };
 };
 
-process(l, r) = fverb(l, r) : mix with {
+process(l, r) = fverb(l, r) /* : mix */ with {
   mix(rl, rr) = dry*l+wet*rl, dry*r+wet*rr;
 };
